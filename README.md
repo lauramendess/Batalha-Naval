@@ -1,5 +1,15 @@
 # 🚢 Batalha Naval - Java
 
+## 👥 Integrantes do Grupo
+
+* ALINE DE MIRANDA LOPES
+* GUILHERME CARVALHO SILVA 
+* GUILHERME HENRIQUE GARCIA SILVA
+* JOÃO GERSON OLIVEIRA LARAGNOIT
+* LAURA MENDES GONÇALVES
+
+---
+
 ## 📖 Descrição do Projeto
 
 Este projeto consiste na implementação do jogo **Batalha Naval** utilizando a linguagem **Java**, desenvolvido como trabalho da disciplina de **Programação Orientada a Objetos (POO)**.
@@ -55,16 +65,6 @@ O jogo termina quando todos os navios de um dos participantes forem destruídos.
 4. O jogador não pode atacar a mesma posição duas vezes.
 5. A máquina também evita repetir ataques já realizados.
 6. Vence quem destruir todos os navios adversários primeiro.
-
----
-
-## 👥 Integrantes do Grupo
-
-* ALINE DE MIRANDA LOPES
-* GUILHERME CARVALHO SILVA 
-* GUILHERME HENRIQUE GARCIA SILVA
-* JOÃO GERSON OLIVEIRA LARAGNOIT
-* LAURA MENDES GONÇALVES
 
 ---
 
