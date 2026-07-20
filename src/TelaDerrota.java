@@ -3,6 +3,9 @@ import java.awt.*;
 
 public class TelaDerrota extends JFrame {
 
+    // Largura desejada para os botões (a altura será calculada automaticamente mantendo a proporção exata)
+    private static final int LARGURA_BOTAO = 230;
+
     public TelaDerrota() {
         setTitle("Batalha Naval - Derrota");
         setSize(1120, 800);
@@ -10,34 +13,28 @@ public class TelaDerrota extends JFrame {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
 
-        Image imagem = new ImageIcon("lib/Derrota.png").getImage();
+        Image imagemFundo = new ImageIcon("lib/Derrota.png").getImage();
 
         JPanel fundo = new JPanel() {
             @Override
             protected void paintComponent(Graphics g) {
                 super.paintComponent(g);
-                g.drawImage(imagem, 0, 0, getWidth(), getHeight(), this);
+                g.drawImage(imagemFundo, 0, 0, getWidth(), getHeight(), this);
             }
         };
-        fundo.setLayout(new GridBagLayout());
 
+        fundo.setLayout(new GridBagLayout());
         setContentPane(fundo);
 
-        ImageIcon imgJogarNovamente = new ImageIcon(
-                new ImageIcon("lib/JogarNovamente.png")
-                        .getImage()
-                        .getScaledInstance(240, 80, Image.SCALE_SMOOTH));
-
-        ImageIcon imgMenu = new ImageIcon(
-                new ImageIcon("lib/MenuPrincipal.png")
-                        .getImage()
-                        .getScaledInstance(240, 80, Image.SCALE_SMOOTH));
+        // Carrega as imagens com proporção nativa e resolução máxima
+        ImageIcon imgJogarNovamente = carregarImagemNitida("lib/JogarNovamente.png", LARGURA_BOTAO);
+        ImageIcon imgMenu = carregarImagemNitida("lib/MenuPrincipal.png", LARGURA_BOTAO);
 
         JButton botaoJogarNovamente = new JButton(imgJogarNovamente);
         JButton botaoMenu = new JButton(imgMenu);
 
-        configurarBotao(botaoJogarNovamente);
-        configurarBotao(botaoMenu);
+        configurarEstiloBotao(botaoJogarNovamente);
+        configurarEstiloBotao(botaoMenu);
 
         botaoJogarNovamente.addActionListener(e -> {
             dispose();
@@ -49,7 +46,7 @@ public class TelaDerrota extends JFrame {
             SwingUtilities.invokeLater(() -> new TelaMenu().setVisible(true));
         });
 
-        JPanel painelBotoes = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 0));
+        JPanel painelBotoes = new JPanel(new FlowLayout(FlowLayout.CENTER, 30, 0));
         painelBotoes.setOpaque(false);
         painelBotoes.add(botaoJogarNovamente);
         painelBotoes.add(botaoMenu);
@@ -60,29 +57,44 @@ public class TelaDerrota extends JFrame {
         gbc.weightx = 1;
         gbc.weighty = 1;
         gbc.anchor = GridBagConstraints.SOUTH;
-        gbc.insets = new Insets(0, 0, 60, 0);
+        gbc.insets = new Insets(0, 0, 70, 0); // Espaçamento harmônico da borda inferior
         fundo.add(painelBotoes, gbc);
     }
 
-    private void configurarBotao(JButton botao) {
+    private ImageIcon carregarImagemNitida(String caminho, int larguraDesejada) {
+        ImageIcon iconOriginal = new ImageIcon(caminho);
 
+        int largOriginal = iconOriginal.getIconWidth();
+        int altOriginal = iconOriginal.getIconHeight();
+
+        // Evita divisão por zero caso a imagem não exista
+        if (largOriginal <= 0 || altOriginal <= 0) {
+            return iconOriginal;
+        }
+
+        // Calcula a altura perfeita proporcional à arte original
+        int alturaCalculada = (int) (((double) altOriginal / largOriginal) * larguraDesejada);
+
+        Image imgRedimensionada = iconOriginal.getImage().getScaledInstance(
+                larguraDesejada,
+                alturaCalculada,
+                Image.SCALE_SMOOTH
+        );
+
+        return new ImageIcon(imgRedimensionada);
+    }
+
+    private void configurarEstiloBotao(JButton botao) {
         botao.setBorderPainted(false);
         botao.setContentAreaFilled(false);
         botao.setFocusPainted(false);
         botao.setOpaque(false);
         botao.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
+        // Ajusta o tamanho do botão exatamente ao do ícone dimensionado
         ImageIcon icon = (ImageIcon) botao.getIcon();
-
-        int largura = 320;
-        int altura = 100;
-
-        Image imagem = icon.getImage().getScaledInstance(
-                largura,
-                altura,
-                Image.SCALE_SMOOTH);
-
-        botao.setIcon(new ImageIcon(imagem));
-        botao.setPreferredSize(new Dimension(largura, altura));
+        if (icon != null) {
+            botao.setPreferredSize(new Dimension(icon.getIconWidth(), icon.getIconHeight()));
+        }
     }
 }
