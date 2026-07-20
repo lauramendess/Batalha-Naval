@@ -7,16 +7,8 @@ import java.awt.geom.Ellipse2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.geom.RoundRectangle2D;
 
-/**
- * Painel que desenha o tabuleiro 10x10 reproduzindo a imagem de referencia
- * (moldura metalica com rebites e grade azul) e permite interacao por clique.
- */
 public class TabuleiroPainel extends JPanel {
 
-    /**
-     * Proporcoes da area util da grade dentro da imagem de fundo (medidas por
-     * analise de pixels).
-     */
     private static final int IMG_ORIGINAL = 1024;
 
     private static final int GRID_X = 103;
@@ -35,14 +27,12 @@ public class TabuleiroPainel extends JPanel {
     private final boolean mostrarNavios;
     private CliqueCelulaListener listenerClique;
 
-    // Estado de preview (usado na tela de posicionamento)
     private int previewTamanho = 0;
     private boolean previewHorizontal = true;
     private int previewLinha = -1;
     private int previewColuna = -1;
     private boolean modoPosicionamento = false;
 
-    // Ultima area calculada da grade (para conversao de coordenadas do mouse)
     private double gradeX, gradeY, celulaW, celulaH;
 
     public TabuleiroPainel(Tabuleiro tabuleiro, boolean mostrarNavios) {
@@ -107,9 +97,6 @@ public class TabuleiroPainel extends JPanel {
         this.listenerClique = listener;
     }
 
-    /**
-     * Ativa o modo de posicionamento, exibindo previa do navio ao passar o mouse.
-     */
     public void ativarPreview(int tamanho, boolean horizontal) {
         this.modoPosicionamento = true;
         this.previewTamanho = tamanho;
@@ -124,10 +111,6 @@ public class TabuleiroPainel extends JPanel {
         repaint();
     }
 
-    /**
-     * Converte coordenadas de pixel do painel para (linha, coluna) da grade, ou
-     * null se fora.
-     */
     private int[] celulaEm(int x, int y) {
         if (celulaW <= 0 || celulaH <= 0)
             return null;
@@ -151,8 +134,6 @@ public class TabuleiroPainel extends JPanel {
         int painelW = getWidth();
         int painelH = getHeight();
 
-        // Calcula a area de desenho da imagem mantendo a proporcao original (letterbox
-        // centralizado)
         double imgW, imgH;
         if (painelW / (double) painelH > PROPORCAO_IMAGEM) {
             imgH = painelH;
@@ -179,7 +160,6 @@ public class TabuleiroPainel extends JPanel {
         celulaW = gradeW / Tabuleiro.TAMANHO;
         celulaH = gradeH / Tabuleiro.TAMANHO;
 
-        // Desenha o conteudo de cada celula (navios/acertos/erros)
         for (int i = 0; i < Tabuleiro.TAMANHO; i++) {
             for (int j = 0; j < Tabuleiro.TAMANHO; j++) {
                 double cx = Math.round(gradeX + j * celulaW);

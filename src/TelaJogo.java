@@ -13,6 +13,15 @@ public class TelaJogo extends JFrame {
     private TabuleiroPainel painelComputador;
     private final Random random = new Random();
 
+    private Point primeiroAcerto = null;
+    private Point ultimoAcerto = null;
+
+    private int dirLinha = 0;
+    private int dirColuna = 0;
+
+    private boolean direcaoDefinida = false;
+    private boolean invertendoDirecao = false;
+
     private JLabel rotuloStatus;
     private boolean turnoJogador = true;
     private boolean jogoTerminado = false;
@@ -40,7 +49,10 @@ public class TelaJogo extends JFrame {
         montarInterface();
     }
 
-    /** Construtor de conveniência: posiciona a frota do jogador aleatoriamente também. */
+    /**
+     * Construtor de conveniência: posiciona a frota do jogador aleatoriamente
+     * também.
+     */
     public TelaJogo() {
         this.tabuleiroJogador = new Tabuleiro();
         this.tabuleiroJogador.posicionarFrotaAleatoria();
@@ -48,12 +60,11 @@ public class TelaJogo extends JFrame {
         montarInterface();
     }
 
-    // --- Subclasse da Placa do Título (Ajustada para renderização dinâmica rápida) ---
+    // --- Subclasse da Placa do Título (Ajustada para renderização dinâmica rápida)
+    // ---
     static class PainelTituloPlaca extends JPanel {
-        private final String texto;
 
         public PainelTituloPlaca(String texto) {
-            this.texto = texto;
             setOpaque(false);
             setLayout(new GridBagLayout());
             setPreferredSize(new Dimension(260, 55));
@@ -133,9 +144,14 @@ public class TelaJogo extends JFrame {
 
         botaoMenu.addMouseListener(new MouseAdapter() {
             @Override
-            public void mouseEntered(MouseEvent e) { botaoMenu.setBorder(new EmptyBorder(bordaHover)); }
+            public void mouseEntered(MouseEvent e) {
+                botaoMenu.setBorder(new EmptyBorder(bordaHover));
+            }
+
             @Override
-            public void mouseExited(MouseEvent e) { botaoMenu.setBorder(new EmptyBorder(bordaNormal)); }
+            public void mouseExited(MouseEvent e) {
+                botaoMenu.setBorder(new EmptyBorder(bordaNormal));
+            }
         });
 
         botaoMenu.addActionListener(e -> {
@@ -219,34 +235,162 @@ public class TelaJogo extends JFrame {
     }
 
     private void turnoComputador() {
+
         if (jogoTerminado)
             return;
-        int linha, coluna;
-        do {
-            linha = random.nextInt(Tabuleiro.TAMANHO);
-            coluna = random.nextInt(Tabuleiro.TAMANHO);
-        } while (tabuleiroJogador.jaAtacado(linha, coluna));
 
-        boolean acertou = tabuleiroJogador.atacar(linha, coluna);
-        painelJogador.repaint();
+        int linha;
+        int coluna;
 
-        if (acertou) {
-            Navio afundado = tabuleiroJogador.navioAfundadoEm(linha, coluna);
-            if (afundado != null) {
-                rotuloStatus.setText("O computador afundou seu " + afundado.getNome() + "!");
+        while (true) {
+
+            if (primeiroAcerto == null) {
+
+                // Modo busca (xadrez)
+                do {
+                    linha = random.nextInt(Tabuleiro.TAMANHO);
+                    coluna = random.nextInt(Tabuleiro.TAMANHO);
+                } while (tabuleiroJogador.jaAtacado(linha, coluna)
+                        || (linha + coluna) % 2 != 0);
+
+            } else if (!direcaoDefinida) {
+
+                // Ainda não sabemos a direção do navio
+                int[][] lados = {
+                        { -1, 0 },
+                        { 1, 0 },
+                        { 0, -1 },
+                        { 0, 1 }
+                };
+
+                boolean encontrou = false;
+
+                linha = coluna = -1;
+
+                for (int[] d : lados) {
+
+                    int l = primeiroAcerto.x + d[0];
+                    int c = primeiroAcerto.y + d[1];
+
+                    if (l >= 0 && l < Tabuleiro.TAMANHO &&
+                            c >= 0 && c < Tabuleiro.TAMANHO &&
+                            !tabuleiroJogador.jaAtacado(l, c)) {
+
+                        linha = l;
+                        coluna = c;
+                        encontrou = true;
+                        break;
+                    }
+                }
+
+                if (!encontrou) {
+                    primeiroAcerto = null;
+                    continue;
+                }
+
             } else {
-                rotuloStatus.setText("O computador acertou seu navio! Jogando novamente...");
+
+                if (!invertendoDirecao) {
+
+                    linha = ultimoAcerto.x + dirLinha;
+                    coluna = ultimoAcerto.y + dirColuna;
+
+                } else {
+
+                    linha = primeiroAcerto.x - dirLinha;
+                    coluna = primeiroAcerto.y - dirColuna;
+
+                }
+
+                if (linha < 0 ||
+                        linha >= Tabuleiro.TAMANHO ||
+                        coluna < 0 ||
+                        coluna >= Tabuleiro.TAMANHO ||
+                        tabuleiroJogador.jaAtacado(linha, coluna)) {
+
+                    if (!invertendoDirecao) {
+
+                        invertendoDirecao = true;
+                        continue;
+
+                    } else {
+
+                        primeiroAcerto = null;
+                        ultimoAcerto = null;
+                        direcaoDefinida = false;
+                        invertendoDirecao = false;
+                        continue;
+                    }
+                }
             }
-            if (tabuleiroJogador.todosNaviosAfundados()) {
-                fimDeJogo(false);
-                return;
+
+            boolean acertou = tabuleiroJogador.atacar(linha, coluna);
+
+            painelJogador.repaint();
+
+            if (acertou) {
+
+                if (primeiroAcerto == null) {
+
+                    primeiroAcerto = new Point(linha, coluna);
+                    ultimoAcerto = primeiroAcerto;
+
+                } else if (!direcaoDefinida) {
+
+                    dirLinha = Integer.compare(linha, primeiroAcerto.x);
+                    dirColuna = Integer.compare(coluna, primeiroAcerto.y);
+
+                    direcaoDefinida = true;
+                    ultimoAcerto = new Point(linha, coluna);
+
+                } else {
+
+                    ultimoAcerto = new Point(linha, coluna);
+
+                }
+
+                Navio afundado = tabuleiroJogador.navioAfundadoEm(linha, coluna);
+
+                if (afundado != null) {
+
+                    primeiroAcerto = null;
+                    ultimoAcerto = null;
+
+                    direcaoDefinida = false;
+                    invertendoDirecao = false;
+
+                    dirLinha = 0;
+                    dirColuna = 0;
+
+                    rotuloStatus.setText(
+                            "O computador afundou seu "
+                                    + afundado.getNome() + "!");
+                } else {
+
+                    rotuloStatus.setText(
+                            "O computador acertou seu navio! Jogando novamente...");
+                }
+
+                if (tabuleiroJogador.todosNaviosAfundados()) {
+                    fimDeJogo(false);
+                    return;
+                }
+
+                Timer timer = new Timer(700, e -> turnoComputador());
+                timer.setRepeats(false);
+                timer.start();
+
+            } else {
+
+                if (direcaoDefinida && !invertendoDirecao) {
+                    invertendoDirecao = true;
+                }
+
+                rotuloStatus.setText("O computador errou. Sua vez!");
+                turnoJogador = true;
             }
-            Timer timer = new Timer(700, e -> turnoComputador());
-            timer.setRepeats(false);
-            timer.start();
-        } else {
-            rotuloStatus.setText("O computador errou. Sua vez!");
-            turnoJogador = true;
+
+            break;
         }
     }
 
