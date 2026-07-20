@@ -16,8 +16,21 @@ public class TelaPosicionamento extends JFrame {
     private int indiceNavioAtual = 0;
     private boolean horizontal = true;
 
-    private final String CAMINHO_ICONE_MENU = "lib/Menu.png";
-    private final String CAMINHO_FUNDO_TEXTO = "lib/FundoTexto.png";
+    private static final String CAMINHO_ICONE_MENU = "lib/Menu.png";
+    private static final String CAMINHO_FUNDO_TEXTO = "lib/FundoTexto.png";
+
+    // Cache de imagens estáticas pré-carregadas
+    private static Image imagemFundoTexto = null;
+    private static ImageIcon iconeMenu = null;
+
+    static {
+        // Carrega as imagens em background assim que a classe é referenciada, sem travar a EDT
+        Toolkit toolkit = Toolkit.getDefaultToolkit();
+        imagemFundoTexto = toolkit.getImage(CAMINHO_FUNDO_TEXTO);
+
+        Image imgMenu = toolkit.getImage(CAMINHO_ICONE_MENU);
+        iconeMenu = new ImageIcon(imgMenu.getScaledInstance(40, 40, Image.SCALE_FAST));
+    }
 
     public TelaPosicionamento() {
         setTitle("Batalha Naval - Posicione sua frota");
@@ -30,31 +43,33 @@ public class TelaPosicionamento extends JFrame {
         fundo.setLayout(new BorderLayout());
         setContentPane(fundo);
 
-        // --- CORREÇÃO DE TAMANHO: Altura reduzida para 120px para não esmagar o tabuleiro central ---
-        ImageIcon iconeOriginal = new ImageIcon(CAMINHO_FUNDO_TEXTO);
-
+        // --- PAINEL TOPO ---
         int alturaDesejada = 120;
-        int larguraBruta = (int) (((double) iconeOriginal.getIconWidth() / iconeOriginal.getIconHeight()) * alturaDesejada * 3.8);
-        final int larguraDesejada = Math.min(larguraBruta, 620);
-
-        Image imagemFundoTexto = iconeOriginal.getImage().getScaledInstance(larguraDesejada, alturaDesejada, Image.SCALE_SMOOTH);
 
         JPanel topo = new JPanel() {
             @Override
             protected void paintComponent(Graphics g) {
                 super.paintComponent(g);
                 if (imagemFundoTexto != null) {
-                    int x = (getWidth() - larguraDesejada) / 2;
-                    int y = (getHeight() - alturaDesejada) / 2;
-                    g.drawImage(imagemFundoTexto, x, y, larguraDesejada, alturaDesejada, this);
+                    int imgWidth = imagemFundoTexto.getWidth(this);
+                    int imgHeight = imagemFundoTexto.getHeight(this);
+
+                    if (imgWidth > 0 && imgHeight > 0) {
+                        int larguraBruta = (int) (((double) imgWidth / imgHeight) * alturaDesejada * 3.8);
+                        int larguraDesejada = Math.min(larguraBruta, 620);
+                        int x = (getWidth() - larguraDesejada) / 2;
+                        int y = (getHeight() - alturaDesejada) / 2;
+
+                        // Renderiza dinamicamente usando o ImageObserver do próprio painel
+                        g.drawImage(imagemFundoTexto, x, y, larguraDesejada, alturaDesejada, this);
+                    }
                 }
             }
         };
         topo.setOpaque(false);
         topo.setLayout(new GridBagLayout());
-
-        // Define a preferência de altura do topo para 125px (deixa espaço de sobra pro tabuleiro)
         topo.setPreferredSize(new Dimension(1000, alturaDesejada + 5));
+
         GridBagConstraints gbc = new GridBagConstraints();
 
         JPanel painelTextos = new JPanel();
@@ -82,11 +97,8 @@ public class TelaPosicionamento extends JFrame {
         painelTextos.add(rotuloInstrucao);
         painelTextos.add(rotuloOrientacao);
 
-        // --- Botão Menu com efeito Hover ---
-        ImageIcon iconeMenu = new ImageIcon(CAMINHO_ICONE_MENU);
-        Image imgRedimensionada = iconeMenu.getImage().getScaledInstance(40, 40, Image.SCALE_SMOOTH);
-        JButton botaoMenu = new JButton(new ImageIcon(imgRedimensionada));
-
+        // --- Botão Menu ---
+        JButton botaoMenu = new JButton(iconeMenu);
         botaoMenu.setBorderPainted(false);
         botaoMenu.setContentAreaFilled(false);
         botaoMenu.setFocusPainted(false);
@@ -113,7 +125,7 @@ public class TelaPosicionamento extends JFrame {
             SwingUtilities.invokeLater(() -> new TelaMenu().setVisible(true));
         });
 
-        // --- Alinhamento dos Elementos no Topo ---
+        // Layout Topo
         gbc.gridx = 0;
         gbc.gridy = 0;
         gbc.weightx = 1.0;
@@ -197,7 +209,7 @@ public class TelaPosicionamento extends JFrame {
         String nome = Tabuleiro.FROTA_NOMES[indiceNavioAtual];
 
         if (!tabuleiroJogador.podePosicionar(linha, coluna, tamanho, horizontal)) {
-            rotuloOrientacao.setText("Posição invalida (fora do tabuleiro ou encostando em outro navio).");
+            rotuloOrientacao.setText("Posição inválida (fora do tabuleiro ou encostando em outro navio).");
             return;
         }
 

@@ -17,59 +17,45 @@ public class TelaJogo extends JFrame {
     private boolean turnoJogador = true;
     private boolean jogoTerminado = false;
 
-    private final String CAMINHO_ICONE_MENU = "lib/Menu.png";
-    private final String CAMINHO_FUNDO_TEXTO = "lib/FundoTexto.png";
+    private static final String CAMINHO_ICONE_MENU = "lib/Menu.png";
+    private static final String CAMINHO_FUNDO_TEXTO = "lib/FundoTexto.png";
 
-    // Pré-carregamento das imagens
-    private final Image imgFundoTexto;
-    private final ImageIcon iconeBotaoMenu;
+    // Cache estático compartilhado de imagens
+    private static Image imgFundoTextoOriginal;
+    private static ImageIcon iconeBotaoMenu;
 
-    /** Inicia a partida com um tabuleiro de jogador ja posicionado manualmente. */
+    static {
+        // Carrega os recursos uma única vez na inicialização da classe
+        Toolkit toolkit = Toolkit.getDefaultToolkit();
+        imgFundoTextoOriginal = toolkit.getImage(CAMINHO_FUNDO_TEXTO);
+
+        Image imgMenu = toolkit.getImage(CAMINHO_ICONE_MENU);
+        iconeBotaoMenu = new ImageIcon(imgMenu.getScaledInstance(45, 45, Image.SCALE_FAST));
+    }
+
+    /** Inicia a partida com um tabuleiro de jogador já posicionado manualmente. */
     public TelaJogo(Tabuleiro tabuleiroJogador) {
-        this.imgFundoTexto = carregarEProporcionarImagem(CAMINHO_FUNDO_TEXTO, 260, 50);
-        this.iconeBotaoMenu = carregarIconeMenu(CAMINHO_ICONE_MENU, 45, 45);
-
         this.tabuleiroJogador = tabuleiroJogador;
         tabuleiroComputador.posicionarFrotaAleatoria();
         montarInterface();
     }
 
-    /** Construtor de conveniencia: posiciona a frota do jogador aleatoriamente tambem. */
+    /** Construtor de conveniência: posiciona a frota do jogador aleatoriamente também. */
     public TelaJogo() {
-        this.imgFundoTexto = carregarEProporcionarImagem(CAMINHO_FUNDO_TEXTO, 260, 50);
-        this.iconeBotaoMenu = carregarIconeMenu(CAMINHO_ICONE_MENU, 45, 45);
-
         this.tabuleiroJogador = new Tabuleiro();
         this.tabuleiroJogador.posicionarFrotaAleatoria();
         tabuleiroComputador.posicionarFrotaAleatoria();
         montarInterface();
     }
 
-    // Método auxiliar para redimensionar rápido mantendo a proporção exata
-    private Image carregarEProporcionarImagem(String caminho, int largDesejada, int altDesejada) {
-        ImageIcon icon = new ImageIcon(caminho);
-        if (icon.getImageLoadStatus() != MediaTracker.COMPLETE || icon.getIconWidth() <= 0) {
-            return null;
-        }
-        return icon.getImage().getScaledInstance(largDesejada, altDesejada, Image.SCALE_FAST);
-    }
+    // --- Subclasse da Placa do Título (Ajustada para renderização dinâmica rápida) ---
+    static class PainelTituloPlaca extends JPanel {
+        private final String texto;
 
-    private ImageIcon carregarIconeMenu(String caminho, int larg, int alt) {
-        ImageIcon icon = new ImageIcon(caminho);
-        Image img = icon.getImage().getScaledInstance(larg, alt, Image.SCALE_FAST);
-        return new ImageIcon(img);
-    }
-
-    // --- Subclasse da Placa do Título (Ajustada para NÃO esticar) ---
-    class PainelTituloPlaca extends JPanel {
-        private final Image imagemPlaca;
-
-        public PainelTituloPlaca(Image imagemPlaca, String texto) {
-            this.imagemPlaca = imagemPlaca;
+        public PainelTituloPlaca(String texto) {
+            this.texto = texto;
             setOpaque(false);
             setLayout(new GridBagLayout());
-
-            // Define o tamanho ideal que o painel do título vai ocupar na tela
             setPreferredSize(new Dimension(260, 55));
 
             JLabel label = new JLabel(texto, SwingConstants.CENTER);
@@ -81,14 +67,19 @@ public class TelaJogo extends JFrame {
         @Override
         protected void paintComponent(Graphics g) {
             super.paintComponent(g);
-            if (imagemPlaca != null) {
-                // Centraliza a imagem no painel mantendo a proporção exata
-                int larg = imagemPlaca.getWidth(this);
-                int alt = imagemPlaca.getHeight(this);
-                int x = (getWidth() - larg) / 2;
-                int y = (getHeight() - alt) / 2;
+            if (imgFundoTextoOriginal != null) {
+                int imgWidth = imgFundoTextoOriginal.getWidth(this);
+                int imgHeight = imgFundoTextoOriginal.getHeight(this);
 
-                g.drawImage(imagemPlaca, x, y, larg, alt, this);
+                if (imgWidth > 0 && imgHeight > 0) {
+                    // Desenha diretamente ajustando ao tamanho preferido do painel sem travar
+                    int larg = 260;
+                    int alt = 50;
+                    int x = (getWidth() - larg) / 2;
+                    int y = (getHeight() - alt) / 2;
+
+                    g.drawImage(imgFundoTextoOriginal, x, y, larg, alt, this);
+                }
             }
         }
     }
@@ -171,9 +162,9 @@ public class TelaJogo extends JFrame {
         painelComputador = new TabuleiroPainel(tabuleiroComputador, false);
         painelComputador.setListenerClique(this::jogadorAtaca);
 
-        // Blocos dos Tabuleiros com Placas de Título Já Inseridas
-        JPanel blocoJogador = criarBlocoTab(new PainelTituloPlaca(imgFundoTexto, "SEU TABULEIRO"), painelJogador);
-        JPanel blocoComputador = criarBlocoTab(new PainelTituloPlaca(imgFundoTexto, "TABULEIRO INIMIGO"), painelComputador);
+        // Blocos dos Tabuleiros com Placas de Título
+        JPanel blocoJogador = criarBlocoTab(new PainelTituloPlaca("SEU TABULEIRO"), painelJogador);
+        JPanel blocoComputador = criarBlocoTab(new PainelTituloPlaca("TABULEIRO INIMIGO"), painelComputador);
 
         JPanel painelTabuleiros = new JPanel(new GridLayout(1, 2, 40, 0));
         painelTabuleiros.setOpaque(false);
@@ -262,7 +253,7 @@ public class TelaJogo extends JFrame {
     private void fimDeJogo(boolean venceuJogador) {
         jogoTerminado = true;
         String mensagem = venceuJogador
-                ? "Parabens! Voce afundou toda a frota inimiga!"
+                ? "Parabéns! Você afundou toda a frota inimiga!"
                 : "Fim de jogo! O computador afundou toda a sua frota.";
         rotuloStatus.setText(mensagem);
         Timer timer = new Timer(600, e -> {
