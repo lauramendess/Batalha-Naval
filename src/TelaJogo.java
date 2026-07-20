@@ -22,7 +22,10 @@ public class TelaJogo extends JFrame {
         montarInterface();
     }
 
-    /** Construtor de conveniencia: posiciona a frota do jogador aleatoriamente tambem. */
+    /**
+     * Construtor de conveniencia: posiciona a frota do jogador aleatoriamente
+     * tambem.
+     */
     public TelaJogo() {
         this.tabuleiroJogador = new Tabuleiro();
         this.tabuleiroJogador.posicionarFrotaAleatoria();
@@ -102,8 +105,10 @@ public class TelaJogo extends JFrame {
     }
 
     private void jogadorAtaca(int linha, int coluna) {
-        if (jogoTerminado || !turnoJogador) return;
-        if (tabuleiroComputador.jaAtacado(linha, coluna)) return;
+        if (jogoTerminado || !turnoJogador)
+            return;
+        if (tabuleiroComputador.jaAtacado(linha, coluna))
+            return;
 
         boolean acertou = tabuleiroComputador.atacar(linha, coluna);
         painelComputador.repaint();
@@ -128,7 +133,8 @@ public class TelaJogo extends JFrame {
     }
 
     private void turnoComputador() {
-        if (jogoTerminado) return;
+        if (jogoTerminado)
+            return;
         int linha, coluna;
         do {
             linha = random.nextInt(Tabuleiro.TAMANHO);
@@ -164,7 +170,16 @@ public class TelaJogo extends JFrame {
                 ? "Parabens! Voce afundou toda a frota inimiga!"
                 : "Fim de jogo! O computador afundou toda a sua frota.";
         rotuloStatus.setText(mensagem);
-        JOptionPane.showMessageDialog(this, mensagem, "Batalha Naval",
-                venceuJogador ? JOptionPane.INFORMATION_MESSAGE : JOptionPane.WARNING_MESSAGE);
+        Timer timer = new Timer(600, e -> {
+            dispose();
+            SwingUtilities.invokeLater(() -> {
+                if (venceuJogador)
+                    new TelaVitoria().setVisible(true);
+                else
+                    new TelaDerrota().setVisible(true);
+            });
+        });
+        timer.setRepeats(false);
+        timer.start();
     }
 }
