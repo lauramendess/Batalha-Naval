@@ -30,20 +30,13 @@ public class TelaPosicionamento extends JFrame {
         fundo.setLayout(new BorderLayout());
         setContentPane(fundo);
 
-        // --- CORREÇÃO: Equilíbrio de tamanho para a placa abraçar todo o texto ---
+        // --- CORREÇÃO DE TAMANHO: Altura reduzida para 120px para não esmagar o tabuleiro central ---
         ImageIcon iconeOriginal = new ImageIcon(CAMINHO_FUNDO_TEXTO);
 
-        // Ajustamos para uma altura intermediária que não cubra o tabuleiro
-        // --- CORREÇÃO: Variáveis efetivamente finais para a classe anônima ---
-        int alturaDesejada = 180;
-
-        // Calcula a largura bruta multiplicada
+        int alturaDesejada = 120;
         int larguraBruta = (int) (((double) iconeOriginal.getIconWidth() / iconeOriginal.getIconHeight()) * alturaDesejada * 3.8);
+        final int larguraDesejada = Math.min(larguraBruta, 620);
 
-        // Math.min garante que o valor não passe de 850, sem precisar reatribuir a variável depois
-        final int larguraDesejada = Math.min(larguraBruta, 600);
-
-        // Cria a imagem redimensionada suavemente
         Image imagemFundoTexto = iconeOriginal.getImage().getScaledInstance(larguraDesejada, alturaDesejada, Image.SCALE_SMOOTH);
 
         JPanel topo = new JPanel() {
@@ -51,7 +44,6 @@ public class TelaPosicionamento extends JFrame {
             protected void paintComponent(Graphics g) {
                 super.paintComponent(g);
                 if (imagemFundoTexto != null) {
-                    // Centraliza a placa perfeitamente no painel superior
                     int x = (getWidth() - larguraDesejada) / 2;
                     int y = (getHeight() - alturaDesejada) / 2;
                     g.drawImage(imagemFundoTexto, x, y, larguraDesejada, alturaDesejada, this);
@@ -61,8 +53,8 @@ public class TelaPosicionamento extends JFrame {
         topo.setOpaque(false);
         topo.setLayout(new GridBagLayout());
 
-        // Define o tamanho do painel baseado na nova altura
-        topo.setPreferredSize(new Dimension(1000, alturaDesejada + 10));
+        // Define a preferência de altura do topo para 125px (deixa espaço de sobra pro tabuleiro)
+        topo.setPreferredSize(new Dimension(1000, alturaDesejada + 5));
         GridBagConstraints gbc = new GridBagConstraints();
 
         JPanel painelTextos = new JPanel();
@@ -70,18 +62,18 @@ public class TelaPosicionamento extends JFrame {
         painelTextos.setLayout(new BoxLayout(painelTextos, BoxLayout.Y_AXIS));
 
         JLabel titulo = new JLabel("POSICIONE SUA FROTA", SwingConstants.CENTER);
-        titulo.setFont(new Font("Arial Black", Font.BOLD, 24));
+        titulo.setFont(new Font("Arial Black", Font.BOLD, 22));
         titulo.setForeground(Color.WHITE);
         titulo.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         rotuloInstrucao = new JLabel("", SwingConstants.CENTER);
-        rotuloInstrucao.setFont(new Font("Arial", Font.BOLD, 16));
+        rotuloInstrucao.setFont(new Font("Arial", Font.BOLD, 15));
         rotuloInstrucao.setForeground(Color.YELLOW);
         rotuloInstrucao.setAlignmentX(Component.CENTER_ALIGNMENT);
-        rotuloInstrucao.setBorder(new EmptyBorder(3, 0, 0, 0));
+        rotuloInstrucao.setBorder(new EmptyBorder(2, 0, 0, 0));
 
         rotuloOrientacao = new JLabel("", SwingConstants.CENTER);
-        rotuloOrientacao.setFont(new Font("Arial", Font.PLAIN, 13));
+        rotuloOrientacao.setFont(new Font("Arial", Font.PLAIN, 12));
         rotuloOrientacao.setForeground(Color.WHITE);
         rotuloOrientacao.setAlignmentX(Component.CENTER_ALIGNMENT);
         rotuloOrientacao.setBorder(new EmptyBorder(1, 0, 0, 0));
@@ -121,13 +113,12 @@ public class TelaPosicionamento extends JFrame {
             SwingUtilities.invokeLater(() -> new TelaMenu().setVisible(true));
         });
 
-        // --- Alinhamento dos Elementos ---
+        // --- Alinhamento dos Elementos no Topo ---
         gbc.gridx = 0;
         gbc.gridy = 0;
         gbc.weightx = 1.0;
         gbc.fill = GridBagConstraints.NONE;
         gbc.anchor = GridBagConstraints.CENTER;
-        // Compensação para centralizar perfeitamente o texto por causa do botão na ponta direita
         gbc.insets = new Insets(0, 55, 0, 0);
         topo.add(painelTextos, gbc);
 
@@ -138,32 +129,33 @@ public class TelaPosicionamento extends JFrame {
         gbc.insets = new Insets(0, 0, 0, 20);
         topo.add(botaoMenu, gbc);
 
-        // Painel Central e Inferior permanecem iguais
+        // --- PAINEL CENTRAL (TABULEIRO) ---
         painelTabuleiro = new TabuleiroPainel(tabuleiroJogador, true);
         painelTabuleiro.setListenerClique(this::tentarPosicionar);
 
         JPanel centro = new JPanel(new GridBagLayout());
         centro.setOpaque(false);
-        centro.setBorder(new EmptyBorder(10, 30, 10, 30));
+        centro.setBorder(new EmptyBorder(5, 20, 5, 20));
         centro.add(painelTabuleiro);
 
+        // --- PAINEL INFERIOR (BOTÕES) ---
         botaoRotacionar = new BotaoMetalico("GIRAR (H/V)");
-        botaoRotacionar.setPreferredSize(new Dimension(190, 55));
+        botaoRotacionar.setPreferredSize(new Dimension(190, 50));
         botaoRotacionar.addActionListener(e -> {
             horizontal = !horizontal;
             atualizarPreviewEstado();
         });
 
         JButton botaoAleatorio = new BotaoMetalico("ALEATÓRIO");
-        botaoAleatorio.setPreferredSize(new Dimension(190, 55));
+        botaoAleatorio.setPreferredSize(new Dimension(190, 50));
         botaoAleatorio.addActionListener(e -> posicionarRestanteAleatorio());
 
         JButton botaoReiniciar = new BotaoMetalico("REINICIAR");
-        botaoReiniciar.setPreferredSize(new Dimension(190, 55));
+        botaoReiniciar.setPreferredSize(new Dimension(190, 50));
         botaoReiniciar.addActionListener(e -> reiniciarPosicionamento());
 
         botaoIniciar = new BotaoMetalico("INICIAR BATALHA");
-        botaoIniciar.setPreferredSize(new Dimension(220, 55));
+        botaoIniciar.setPreferredSize(new Dimension(220, 50));
         botaoIniciar.setEnabled(false);
         botaoIniciar.addActionListener(e -> iniciarBatalha());
 

@@ -19,12 +19,12 @@ public class TabuleiroPainel extends JPanel {
      */
     private static final int IMG_ORIGINAL = 1024;
 
-    private static final int GRID_X = 90; 
-    private static final int GRID_Y = 155; 
+    private static final int GRID_X = 103;
+    private static final int GRID_Y = 142;
 
-    private static final int GRID_W = 835; 
-    private static final int GRID_H = 800; 
-    private static final double PROPORCAO_IMAGEM = 286.0 / 261.0;
+    private static final int GRID_W = 820;
+    private static final int GRID_H = 820;
+    private static final double PROPORCAO_IMAGEM = 1.0;
 
     public interface CliqueCelulaListener {
         void aoClicar(int linha, int coluna);
@@ -171,7 +171,7 @@ public class TabuleiroPainel extends JPanel {
             g2.fillRoundRect((int) imgX, (int) imgY, (int) imgW, (int) imgH, 12, 12);
         }
 
-        gradeX = imgX + imgW * GRID_X / IMG_ORIGINAL + 2;
+        gradeX = imgX + imgW * GRID_X / IMG_ORIGINAL;
         gradeY = imgY + imgH * GRID_Y / IMG_ORIGINAL;
 
         double gradeW = imgW * GRID_W / IMG_ORIGINAL;
