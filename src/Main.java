@@ -6,7 +6,6 @@ public class Main {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         } catch (Exception ignored) {
         }
-        //SwingUtilities.invokeLater(() -> new TelaMenu().setVisible(true));
-        SwingUtilities.invokeLater(() -> new TelaDerrota().setVisible(true));
+            SwingUtilities.invokeLater(() -> new TelaMenu().setVisible(true));
     }
 }
